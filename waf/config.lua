@@ -26,11 +26,12 @@ config_cc_check = "on"
 config_cc_rate = "600/60"
 --enable/disable post filtering
 config_post_check = "on"
+--enable/disable header filtering
+config_header_check = "on"
 --config waf output redirect/html
 config_waf_output = "html"
 --if config_waf_output ,setting url
 config_waf_redirect_url = "http://localhost"
 config_output_html=[[
-Access Denied by Rules!
+Access Denied By WAF!
 ]]
-

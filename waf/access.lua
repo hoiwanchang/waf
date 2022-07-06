@@ -10,6 +10,7 @@ function waf_main()
     elseif url_attack_check() then
     elseif url_args_attack_check() then
     elseif post_attack_check() then
+    elseif header_attack_check() then
     else
         return
     end

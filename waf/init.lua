@@ -182,13 +182,45 @@ function post_attack_check()
                     ARGS_DATA = key
                 end
                 if ARGS_DATA and type(ARGS_DATA) ~= "boolean" and rule ~="" and rulematch(unescape(ARGS_DATA),rule,"jo") then
-                    log_record('Deny_URL_Args',ngx.var.request_uri,"-",rule)
+                    log_record('Deny_Post_Args',ngx.var.request_uri,"-",rule)
                     if config_waf_enable == "on" then
                         waf_output()
                         return true
                     end
                 end
             end
+        end
+    end
+    return false
+end
+
+--deny header
+function header_attack_check()
+    if config_header_check == "on" then
+        local HEADER_RULES = get_rule('header.rule')
+        for _,rule in pairs(HEADER_RULES) do
+
+            local HEADERS, err = ngx.req.get_headers()
+
+            if err == "truncated" then
+                -- one can choose to ignore or reject the current request here
+            end
+
+            for key, val in pairs(HEADERS) do
+                if type(val) == 'table' then
+                    HEADER_DATA = table.concat(val, " ")
+                else
+                    HEADER_DATA = val
+                end
+                if HEADER_DATA and type(HEADER_DATA) ~= "boolean" and rule ~="" and rulematch(unescape(HEADER_DATA),rule,"jo") then
+                    log_record('Deny_Header_Injects',ngx.var.request_uri,"-",rule)
+                    if config_waf_enable == "on" then
+                        waf_output()
+                        return true
+                    end
+                end
+            end
+
         end
     end
     return false
