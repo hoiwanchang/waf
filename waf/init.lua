@@ -165,12 +165,31 @@ end
 
 --deny post
 function post_attack_check()
-    if config_post_check == "on" then
+    if config_post_check == "on" and ngx.req.get_method() == "POST" then
+        local READ_BODY = ngx.req.read_body()
         local POST_RULES = get_rule('post.rule')
-        for _,rule in pairs(ARGS_RULES) do
-            local POST_ARGS = ngx.req.get_post_args()
+        for _,rule in pairs(POST_RULES) do
+	    local POST_ARGS, err = ngx.req.get_post_args()
+
+            if err == "truncated" then
+                -- one can choose to ignore or reject the current request here
+            end
+
+            for key, val in pairs(POST_ARGS) do
+                if type(key) == 'table' then
+                    ARGS_DATA = table.concat(key, " ")
+                else
+                    ARGS_DATA = key
+                end
+                if ARGS_DATA and type(ARGS_DATA) ~= "boolean" and rule ~="" and rulematch(unescape(ARGS_DATA),rule,"jo") then
+                    log_record('Deny_URL_Args',ngx.var.request_uri,"-",rule)
+                    if config_waf_enable == "on" then
+                        waf_output()
+                        return true
+                    end
+                end
+            end
         end
-        return true
     end
     return false
 end

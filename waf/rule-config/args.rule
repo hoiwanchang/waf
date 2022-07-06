@@ -6,6 +6,7 @@ select.+(from|limit)
 having|rongjitest
 sleep\((\s*)(\d*)(\s*)\)
 benchmark\((.*)\,(.*)\)
+ixmstart
 base64_decode\(
 (?:from\W+information_schema\W)
 (?:(?:current_)user|database|schema|connection_id)\s*\(

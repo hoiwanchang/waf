@@ -18,8 +18,9 @@
 5.	支持Cookie过滤，匹配自定义规则中的条目，然后进行处理（返回403）。
 6.	支持URL过滤，匹配自定义规则中的条目，如果用户请求的URL包含这些，返回403。
 7.	支持URL参数过滤，原理同上。
-8.	支持日志记录，将所有拒绝的操作，记录到日志中去。
-9.	日志记录为JSON格式，便于日志分析，例如使用ELK进行攻击日志收集、存储、搜索和展示。
+8.      支持POST Body字符串过滤，原理同上。
+9.	支持日志记录，将所有拒绝的操作，记录到日志中去。
+10.	日志记录为JSON格式，便于日志分析，例如使用ELK进行攻击日志收集、存储、搜索和展示。
 
 ### WAF实现
 
@@ -80,6 +81,7 @@ nginx: configuration file /usr/local/openresty-1.17.8.2/nginx/conf/nginx.conf te
     lua_package_path "/usr/local/openresty/nginx/conf/waf/?.lua";
     init_by_lua_file "/usr/local/openresty/nginx/conf/waf/init.lua";
     access_by_lua_file "/usr/local/openresty/nginx/conf/waf/access.lua";
+# 软连接必须添加，不然会影响模块的使用
 [root@opsany ~]# ln -s /usr/local/openresty/lualib/resty/ /usr/local/openresty/nginx/conf/waf/resty
 [root@opsany ~]# /usr/local/openresty/nginx/sbin/nginx -t
 [root@opsany ~]# /usr/local/openresty/nginx/sbin/nginx -s reload
