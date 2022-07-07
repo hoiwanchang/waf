@@ -123,19 +123,26 @@ end
 function url_args_attack_check()
     if config_url_args_check == "on" then
         local ARGS_RULES = get_rule('args.rule')
-        for _,rule in pairs(ARGS_RULES) do
-            local REQ_ARGS = ngx.req.get_uri_args()
-            for key, val in pairs(REQ_ARGS) do
-                if type(val) == 'table' then
-                    local ARGS_DATA = table.concat(val, " ")
-                else
-                    local ARGS_DATA = val
-                end
-                if ARGS_DATA and type(ARGS_DATA) ~= "boolean" and rule ~="" and rulematch(unescape(ARGS_DATA),rule,"jo") then
-                    log_record('Deny_URL_Args',ngx.var.request_uri,"-",rule)
-                    if config_waf_enable == "on" then
-                        waf_output()
-                        return true
+        local REQ_ARGS, err = ngx.req.get_uri_args()
+
+        if err == "truncated" then
+            ngx.exit(403)
+        end  
+
+        if REQ_ARGS ~= nil then
+            for _,rule in pairs(ARGS_RULES) do
+                for key, val in pairs(REQ_ARGS) do
+                    if type(val) == 'table' then
+                        local ARGS_DATA = table.concat(val, " ")
+                    else
+                        local ARGS_DATA = val
+                    end
+                    if ARGS_DATA and type(ARGS_DATA) ~= "boolean" and rule ~="" and rulematch(unescape(ARGS_DATA),rule,"jo") then
+                        log_record('Deny_URL_Args',ngx.var.request_uri,"-",rule)
+                        if config_waf_enable == "on" then
+                            waf_output()
+                            return true
+                        end
                     end
                 end
             end
@@ -168,46 +175,43 @@ function post_attack_check()
     if config_post_check == "on" and ngx.req.get_method() == "POST" then
         local READ_BODY = ngx.req.read_body()
         local POST_RULES = get_rule('post.rule')
-        for _,rule in pairs(POST_RULES) do
-	    local POST_ARGS, err = ngx.req.get_post_args()
-            
-            if POST_ARGS == nil then
-                -- if none post args found, return false
-                return false
-            end
+	local POST_ARGS, err = ngx.req.get_post_args()
 
-            if err == "truncated" then
-                -- one can choose to ignore or reject the current request here
-            end
+        if err == "truncated" then
+            ngx.exit(403)
+        end
+       
+        if POST_ARGS ~= nil then
+            for _,rule in pairs(POST_RULES) do
 
-            for key, val in pairs(POST_ARGS) do
+                for key, val in pairs(POST_ARGS) do
 
-                if type(key) == 'table' then
-                    local ARGS_DATA = table.concat(key, " ")
-                else
-                    local ARGS_DATA = key
-                end
-                if ARGS_DATA and type(ARGS_DATA) ~= "boolean" and rule ~="" and rulematch(unescape(ARGS_DATA),rule,"jo") then
-                    log_record('Deny_Post_Args',ngx.var.request_uri,"-",rule)
-                    if config_waf_enable == "on" then
-                        waf_output()
-                        return true
+                    if type(key) == 'table' then
+                        local ARGS_DATA = table.concat(key, " ")
+                    else
+                        local ARGS_DATA = key
+                    end
+                    if ARGS_DATA and type(ARGS_DATA) ~= "boolean" and rule ~="" and rulematch(unescape(ARGS_DATA),rule,"jo") then
+                        log_record('Deny_Post_Args',ngx.var.request_uri,"-",rule)
+                        if config_waf_enable == "on" then
+                            waf_output()
+                            return true
+                        end
+                    end
+                    -- post data got 2 diff forms, check value too. 
+                    if type(val) == 'table' then
+                        local ARGS_DATA = table.concat(val, " ")
+                    else
+                        local ARGS_DATA = val
+                    end
+                    if ARGS_DATA and type(ARGS_DATA) ~= "boolean" and rule ~="" and rulematch(unescape(ARGS_DATA),rule,"jo") then
+                        log_record('Deny_Post_Args',ngx.var.request_uri,"-",rule)
+                        if config_waf_enable == "on" then
+                            waf_output()
+                            return true
+                        end
                     end
                 end
-                -- post data got 2 diff forms, check value too. 
-                if type(val) == 'table' then
-                    local ARGS_DATA = table.concat(val, " ")
-                else
-                    local ARGS_DATA = val
-                end
-                if ARGS_DATA and type(ARGS_DATA) ~= "boolean" and rule ~="" and rulematch(unescape(ARGS_DATA),rule,"jo") then
-                    log_record('Deny_Post_Args',ngx.var.request_uri,"-",rule)
-                    if config_waf_enable == "on" then
-                        waf_output()
-                        return true
-                    end
-                end
-
             end
         end
     end
@@ -218,31 +222,30 @@ end
 function header_attack_check()
     if config_header_check == "on" then
         local HEADER_RULES = get_rule('header.rule')
-        for _,rule in pairs(HEADER_RULES) do
+        local HEADERS, err = ngx.req.get_headers()
 
-            local HEADERS, err = ngx.req.get_headers()
+        if err == "truncated" then
+            ngx.exit(403)
+        end
 
-            if err == "truncated" then
-                -- one can choose to ignore or reject the current request here
-            end
-
-            for key, val in pairs(HEADERS) do
-                if type(val) == 'table' then
-                    local HEADER_DATA = table.concat(val, " ")
-                else
-                    local HEADER_DATA = val
-                end
-                if HEADER_DATA and type(HEADER_DATA) ~= "boolean" and rule ~="" and rulematch(unescape(HEADER_DATA),rule,"jo") then
-                    log_record('Deny_Header_Injects',ngx.var.request_uri,"-",rule)
-                    if config_waf_enable == "on" then
-                        waf_output()
-                        return true
+        if HEADERS ~= nil then
+            for _,rule in pairs(HEADER_RULES) do
+                for key, val in pairs(HEADERS) do
+                    if type(val) == 'table' then
+                        local HEADER_DATA = table.concat(val, " ")
+                    else
+                        local HEADER_DATA = val
+                    end
+                    if HEADER_DATA and type(HEADER_DATA) ~= "boolean" and rule ~="" and rulematch(unescape(HEADER_DATA),rule,"jo") then
+                        log_record('Deny_Header_Injects',ngx.var.request_uri,"-",rule)
+                        if config_waf_enable == "on" then
+                            waf_output()
+                            return true
+                        end
                     end
                 end
             end
-
         end
+
     end
     return false
-end
-
