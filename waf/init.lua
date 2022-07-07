@@ -127,9 +127,9 @@ function url_args_attack_check()
             local REQ_ARGS = ngx.req.get_uri_args()
             for key, val in pairs(REQ_ARGS) do
                 if type(val) == 'table' then
-                    ARGS_DATA = table.concat(val, " ")
+                    local ARGS_DATA = table.concat(val, " ")
                 else
-                    ARGS_DATA = val
+                    local ARGS_DATA = val
                 end
                 if ARGS_DATA and type(ARGS_DATA) ~= "boolean" and rule ~="" and rulematch(unescape(ARGS_DATA),rule,"jo") then
                     log_record('Deny_URL_Args',ngx.var.request_uri,"-",rule)
@@ -170,16 +170,22 @@ function post_attack_check()
         local POST_RULES = get_rule('post.rule')
         for _,rule in pairs(POST_RULES) do
 	    local POST_ARGS, err = ngx.req.get_post_args()
+            
+            if POST_ARGS == nil then
+                -- if none post args found, return false
+                return false
+            end
 
             if err == "truncated" then
                 -- one can choose to ignore or reject the current request here
             end
 
             for key, val in pairs(POST_ARGS) do
+
                 if type(key) == 'table' then
-                    ARGS_DATA = table.concat(key, " ")
+                    local ARGS_DATA = table.concat(key, " ")
                 else
-                    ARGS_DATA = key
+                    local ARGS_DATA = key
                 end
                 if ARGS_DATA and type(ARGS_DATA) ~= "boolean" and rule ~="" and rulematch(unescape(ARGS_DATA),rule,"jo") then
                     log_record('Deny_Post_Args',ngx.var.request_uri,"-",rule)
@@ -188,6 +194,20 @@ function post_attack_check()
                         return true
                     end
                 end
+                -- post data got 2 diff forms, check value too. 
+                if type(val) == 'table' then
+                    local ARGS_DATA = table.concat(val, " ")
+                else
+                    local ARGS_DATA = val
+                end
+                if ARGS_DATA and type(ARGS_DATA) ~= "boolean" and rule ~="" and rulematch(unescape(ARGS_DATA),rule,"jo") then
+                    log_record('Deny_Post_Args',ngx.var.request_uri,"-",rule)
+                    if config_waf_enable == "on" then
+                        waf_output()
+                        return true
+                    end
+                end
+
             end
         end
     end
@@ -208,9 +228,9 @@ function header_attack_check()
 
             for key, val in pairs(HEADERS) do
                 if type(val) == 'table' then
-                    HEADER_DATA = table.concat(val, " ")
+                    local HEADER_DATA = table.concat(val, " ")
                 else
-                    HEADER_DATA = val
+                    local HEADER_DATA = val
                 end
                 if HEADER_DATA and type(HEADER_DATA) ~= "boolean" and rule ~="" and rulematch(unescape(HEADER_DATA),rule,"jo") then
                     log_record('Deny_Header_Injects',ngx.var.request_uri,"-",rule)
