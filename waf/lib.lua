@@ -5,13 +5,13 @@ require 'config'
 function get_client_ip()
     local CLIENT_IP = ngx.req.get_headers()["X_real_ip"]
     if CLIENT_IP == nil then
-        local CLIENT_IP = ngx.req.get_headers()["X_Forwarded_For"]
+        CLIENT_IP = ngx.req.get_headers()["X_Forwarded_For"]
     end
     if CLIENT_IP == nil then
-        local CLIENT_IP  = ngx.var.remote_addr
+        CLIENT_IP  = ngx.var.remote_addr
     end
     if CLIENT_IP == nil then
-        local CLIENT_IP  = "unknown"
+        CLIENT_IP  = "unknown"
     end
     return CLIENT_IP
 end
@@ -20,7 +20,7 @@ end
 function get_user_agent()
     local USER_AGENT = ngx.var.http_user_agent
     if USER_AGENT == nil then
-       local USER_AGENT = "unknown"
+       USER_AGENT = "unknown"
     end
     return USER_AGENT
 end
