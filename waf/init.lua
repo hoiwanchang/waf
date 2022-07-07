@@ -60,7 +60,13 @@ end
 function cc_attack_check()
     if config_cc_check == "on" then
         local ATTACK_URI=ngx.var.uri
-        local CC_TOKEN = get_client_ip()..ATTACK_URI
+        local ATTACK_URI=ngx.var.uri
+        local CLIENT_IP = get_client_ip()
+        if CLIENT_IP ~= nil and ATTACK_URI ~= nil then
+            local CC_TOKEN = get_client_ip()..ATTACK_URI
+        else
+            local CC_TOKEN = "tokens-for-illgale-requests"
+        end
         local limit = ngx.shared.limit
         local CCcount=tonumber(string.match(config_cc_rate,'(.*)/'))
         local CCseconds=tonumber(string.match(config_cc_rate,'/(.*)'))
@@ -150,6 +156,7 @@ function url_args_attack_check()
     end
     return false
 end
+
 --deny user agent
 function user_agent_attack_check()
     if config_user_agent_check == "on" then
@@ -249,3 +256,4 @@ function header_attack_check()
 
     end
     return false
+end
