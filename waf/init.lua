@@ -182,7 +182,7 @@ function post_attack_check()
     if config_post_check == "on" and ngx.req.get_method() == "POST" then
         local READ_BODY = ngx.req.read_body()
         local POST_RULES = get_rule('post.rule')
-	local POST_ARGS, err = ngx.req.get_post_args()
+	local POST_ARGS, err = ngx.req.get_post_args(0)
         local ARGS_DATA = ""
 
         if err == "truncated" then
