@@ -60,12 +60,12 @@ end
 function cc_attack_check()
     if config_cc_check == "on" then
         local ATTACK_URI=ngx.var.uri
-        local ATTACK_URI=ngx.var.uri
         local CLIENT_IP = get_client_ip()
+        local CC_TOKEN = ""
         if CLIENT_IP ~= nil and ATTACK_URI ~= nil then
-            local CC_TOKEN = get_client_ip()..ATTACK_URI
+            CC_TOKEN = get_client_ip()..ATTACK_URI
         else
-            local CC_TOKEN = "tokens-for-illgale-requests"
+            CC_TOKEN = "tokens-for-illgale-requests"
         end
         local limit = ngx.shared.limit
         local CCcount=tonumber(string.match(config_cc_rate,'(.*)/'))
@@ -130,7 +130,7 @@ function url_args_attack_check()
     if config_url_args_check == "on" then
         local ARGS_RULES = get_rule('args.rule')
         local REQ_ARGS, err = ngx.req.get_uri_args()
-
+        local ARGS_DATA = ""
         if err == "truncated" then
             ngx.exit(403)
         end  
@@ -139,9 +139,9 @@ function url_args_attack_check()
             for _,rule in pairs(ARGS_RULES) do
                 for key, val in pairs(REQ_ARGS) do
                     if type(val) == 'table' then
-                        local ARGS_DATA = table.concat(val, " ")
+                        ARGS_DATA = table.concat(val, " ")
                     else
-                        local ARGS_DATA = val
+                        ARGS_DATA = val
                     end
                     if ARGS_DATA and type(ARGS_DATA) ~= "boolean" and rule ~="" and rulematch(unescape(ARGS_DATA),rule,"jo") then
                         log_record('Deny_URL_Args',ngx.var.request_uri,"-",rule)
@@ -183,6 +183,7 @@ function post_attack_check()
         local READ_BODY = ngx.req.read_body()
         local POST_RULES = get_rule('post.rule')
 	local POST_ARGS, err = ngx.req.get_post_args()
+        local ARGS_DATA = ""
 
         if err == "truncated" then
             ngx.exit(403)
@@ -194,9 +195,9 @@ function post_attack_check()
                 for key, val in pairs(POST_ARGS) do
 
                     if type(key) == 'table' then
-                        local ARGS_DATA = table.concat(key, " ")
+                        ARGS_DATA = table.concat(key, " ")
                     else
-                        local ARGS_DATA = key
+                        ARGS_DATA = key
                     end
                     if ARGS_DATA and type(ARGS_DATA) ~= "boolean" and rule ~="" and rulematch(unescape(ARGS_DATA),rule,"jo") then
                         log_record('Deny_Post_Args',ngx.var.request_uri,"-",rule)
@@ -207,9 +208,9 @@ function post_attack_check()
                     end
                     -- post data got 2 diff forms, check value too. 
                     if type(val) == 'table' then
-                        local ARGS_DATA = table.concat(val, " ")
+                        ARGS_DATA = table.concat(val, " ")
                     else
-                        local ARGS_DATA = val
+                        ARGS_DATA = val
                     end
                     if ARGS_DATA and type(ARGS_DATA) ~= "boolean" and rule ~="" and rulematch(unescape(ARGS_DATA),rule,"jo") then
                         log_record('Deny_Post_Args',ngx.var.request_uri,"-",rule)
@@ -230,6 +231,7 @@ function header_attack_check()
     if config_header_check == "on" then
         local HEADER_RULES = get_rule('header.rule')
         local HEADERS, err = ngx.req.get_headers()
+        local HEADER_DATA = ""
 
         if err == "truncated" then
             ngx.exit(403)
@@ -239,9 +241,9 @@ function header_attack_check()
             for _,rule in pairs(HEADER_RULES) do
                 for key, val in pairs(HEADERS) do
                     if type(val) == 'table' then
-                        local HEADER_DATA = table.concat(val, " ")
+                        HEADER_DATA = table.concat(val, " ")
                     else
-                        local HEADER_DATA = val
+                        HEADER_DATA = val
                     end
                     if HEADER_DATA and type(HEADER_DATA) ~= "boolean" and rule ~="" and rulematch(unescape(HEADER_DATA),rule,"jo") then
                         log_record('Deny_Header_Injects',ngx.var.request_uri,"-",rule)
