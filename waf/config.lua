@@ -26,6 +26,8 @@ config_cc_check = "on"
 config_cc_rate = "600/60"
 --enable/disable post filtering
 config_post_check = "on"
+--enable/disable body keyword filtering !!not working for now!!
+config_body_keyword_check = "off"
 --enable/disable header filtering
 config_header_check = "on"
 --config waf output redirect/html

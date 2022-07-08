@@ -11,6 +11,8 @@ function waf_main()
     elseif url_args_attack_check() then
     elseif post_attack_check() then
     elseif header_attack_check() then
+    -- not working for now
+    --elseif body_keyword_check() then
     else
         return
     end

@@ -129,7 +129,7 @@ end
 function url_args_attack_check()
     if config_url_args_check == "on" then
         local ARGS_RULES = get_rule('args.rule')
-        local REQ_ARGS, err = ngx.req.get_uri_args()
+        local REQ_ARGS, err = ngx.req.get_uri_args(0)
         local ARGS_DATA = ""
         if err == "truncated" then
             ngx.exit(403)
@@ -230,7 +230,7 @@ end
 function header_attack_check()
     if config_header_check == "on" then
         local HEADER_RULES = get_rule('header.rule')
-        local HEADERS, err = ngx.req.get_headers()
+        local HEADERS, err = ngx.req.get_headers(0)
         local HEADER_DATA = ""
 
         if err == "truncated" then
@@ -258,4 +258,31 @@ function header_attack_check()
 
     end
     return false
+end
+
+--response body filter
+function body_keyword_check()
+    if config_body_keyword_check == "on" then
+        local BODY_RULES = get_rule('body.rule')
+        local NGX_BODY, err = string.sub(ngx.arg[1],1,2048)
+        --local NGX_BODY, err = ngx.resp.get_headers(0)
+        log_record('Deny_Body_Filter',NGX_BODY,"-","debugRule")
+
+        if err == "truncated" then
+            ngx.exit(403)
+        end
+       
+        if NGX_BODY ~= nil then
+            for _,rule in pairs(BODY_RULES) do
+                if rule ~= "" and rulematch(unescape(NGX_BODY), rule, "jo") then
+                    log_record('Deny_Body_Filter',ngx.var.request_uri,"-",rule)
+                    if config_waf_enable == "on" then
+                        waf_output()
+                        return true
+                    end
+                end
+            end
+        end
+
+    end
 end
